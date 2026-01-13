@@ -1,5 +1,0 @@
-pandas
-python-telegram-bot>=21.0
-rank-bm25
-openai
-python-dotenv
