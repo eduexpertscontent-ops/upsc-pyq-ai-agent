@@ -1,9 +1,13 @@
 import os
 import pandas as pd
+from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from rank_bm25 import BM25Okapi
 from openai import OpenAI
+
+# Load environment variables from .env file (for local testing)
+load_dotenv()
 
 # ---------------- CONFIG ----------------
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -13,8 +17,13 @@ CSV_PATH = "pyq.csv"
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # ---------------- LOAD DATA ----------------
+# Ensure pyq.csv is in your GitHub repository
+if not os.path.exists(CSV_PATH):
+    raise FileNotFoundError(f"Critical Error: {CSV_PATH} not found in the root directory.")
+
 df = pd.read_csv(CSV_PATH)
 
+# Pre-processing for BM25 Search
 documents = (df["question_text"].fillna("") + " " + df["subject"].fillna("")).tolist()
 tokenized_docs = [doc.lower().split() for doc in documents]
 bm25 = BM25Okapi(tokenized_docs)
@@ -89,6 +98,8 @@ def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("pyq", pyq))
+    
+    print("Bot is polling...")
     app.run_polling()
 
 if __name__ == "__main__":
