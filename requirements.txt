@@ -1,5 +1,5 @@
-python-telegram-bot==20.7
 pandas
-openai
+python-telegram-bot==20.7
 rank-bm25
+openai
 python-dotenv
