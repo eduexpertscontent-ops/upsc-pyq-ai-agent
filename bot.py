@@ -47,10 +47,24 @@ def format_q(row):
 # 4. MAIN MENU
 @dp.message(Command("start"))
 async def cmd_start(m: types.Message):
+    # Check if the message is from a GROUP or SUPERGROUP
+    if m.chat.type in ["group", "supergroup"]:
+        kb = InlineKeyboardBuilder()
+        # This link opens a private chat with your bot
+        bot_user = (await bot.get_me()).username
+        kb.row(types.InlineKeyboardButton(
+            text="🔒 Open Private PYQ Agent", 
+            url=f"https://t.me/{bot_user}?start=start")
+        )
+        await m.reply("To keep the group clean, please use the bot in private chat:", 
+                      reply_markup=kb.as_markup())
+        return
+
+    # This part runs ONLY in PRIVATE CHAT
     kb = InlineKeyboardBuilder()
     kb.row(types.InlineKeyboardButton(text="🗓 Year-wise", callback_data="start_year"))
     kb.row(types.InlineKeyboardButton(text="📖 Subject-wise", callback_data="start_sub"))
-    await m.answer("<b>UPSC PYQ Agent</b>\nChoose a mode or type a keyword to search:", 
+    await m.answer("<b>UPSC PYQ Agent (Private Mode)</b>\nChoose a mode or type a keyword:", 
                    reply_markup=kb.as_markup(), parse_mode="HTML")
 
 # --- YEAR WISE PATH ---
@@ -170,3 +184,4 @@ async def main():
 if __name__ == "__main__":
 
     asyncio.run(main())
+
