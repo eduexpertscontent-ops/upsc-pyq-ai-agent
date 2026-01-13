@@ -47,26 +47,39 @@ def format_q(row):
 # 4. MAIN MENU
 @dp.message(Command("start"))
 async def cmd_start(m: types.Message):
-    # Check if the message is from a GROUP or SUPERGROUP
+    # 1. If the message is in a group
     if m.chat.type in ["group", "supergroup"]:
-        kb = InlineKeyboardBuilder()
-        # This link opens a private chat with your bot
-        bot_user = (await bot.get_me()).username
-        kb.row(types.InlineKeyboardButton(
-            text="🔒 Open Private PYQ Agent", 
-            url=f"https://t.me/{bot_user}?start=start")
-        )
-        await m.reply("To keep the group clean, please use the bot in private chat:", 
-                      reply_markup=kb.as_markup())
+        try:
+            # Send the menu to the user's PRIVATE chat
+            kb = InlineKeyboardBuilder()
+            kb.row(types.InlineKeyboardButton(text="🗓 Year-wise", callback_data="start_year"))
+            kb.row(types.InlineKeyboardButton(text="📖 Subject-wise", callback_data="start_sub"))
+            
+            await bot.send_message(
+                m.from_user.id, 
+                "<b>UPSC PYQ Agent</b>\nYou started this from the group. Here is your private study space:",
+                reply_markup=kb.as_markup(),
+                parse_mode="HTML"
+            )
+            
+            # 2. DELETE the /start message from the group so others don't see it
+            await m.delete()
+            
+        except Exception as e:
+            # If the user has NEVER messaged the bot privately, the bot can't DM them.
+            # We show a temporary notice and then delete it.
+            note = await m.reply(f"Hi {m.from_user.first_name}, please click @{(await bot.get_me()).username} and press 'Start' first to enable private search!")
+            await asyncio.sleep(10)
+            await note.delete()
+            await m.delete()
         return
 
-    # This part runs ONLY in PRIVATE CHAT
+    # 3. If the message is already in PRIVATE chat
     kb = InlineKeyboardBuilder()
     kb.row(types.InlineKeyboardButton(text="🗓 Year-wise", callback_data="start_year"))
     kb.row(types.InlineKeyboardButton(text="📖 Subject-wise", callback_data="start_sub"))
-    await m.answer("<b>UPSC PYQ Agent (Private Mode)</b>\nChoose a mode or type a keyword:", 
+    await m.answer("<b>UPSC PYQ Agent</b>\nChoose a mode or type a keyword to search:", 
                    reply_markup=kb.as_markup(), parse_mode="HTML")
-
 # --- YEAR WISE PATH ---
 @dp.callback_query(F.data == "start_year")
 async def yr_sel(c: types.CallbackQuery):
@@ -184,4 +197,5 @@ async def main():
 if __name__ == "__main__":
 
     asyncio.run(main())
+
 
